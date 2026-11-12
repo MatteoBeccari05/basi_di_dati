@@ -31,22 +31,6 @@ L'obiettivo è avere tutto in un unico posto, ordinato e facile da consultare, e
 
 > ✏️ Modifica questa lista in base al programma effettivo del corso.
 
-## 📂 Struttura della repository
-
-```text
-basi_di_dati/
-├── 📁 esercizi/
-│   ├── 📁 lezione_01/
-│   ├── 📁 lezione_02/
-│   └── ...
-├── 📁 esami/            # tracce e soluzioni delle prove precedenti
-├── 📁 schemi/           # script di creazione database e dati di esempio
-├── 📁 appunti/          # riassunti e schemi teorici
-└── 📄 README.md
-```
-
-> 🚧 La struttura si aggiornerà man mano che inserisco nuovi file.
-
 ## 🚀 Come usare gli esercizi
 
 1. **Clona la repository**
@@ -76,18 +60,6 @@ basi_di_dati/
 - Il testo dell'esercizio è riportato in un commento all'inizio del file
 - Le query sono formattate e commentate per essere leggibili
 
-Esempio:
-
-```sql
--- Esercizio 1
--- Trovare nome e cognome degli studenti iscritti al corso di Basi di Dati.
-
-SELECT s.nome, s.cognome
-FROM studenti s
-JOIN iscrizioni i ON i.matricola = s.matricola
-JOIN corsi c ON c.id = i.id_corso
-WHERE c.nome = 'Basi di Dati';
-```
 
 ## ⚠️ Disclaimer
 
