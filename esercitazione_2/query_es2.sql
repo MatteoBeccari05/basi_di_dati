@@ -1,69 +1,72 @@
--- 1. Nome degli studenti del corso di laurea CS
-SELECT nome 
-FROM studente 
-WHERE Corso_laurea = 'CS';
+USE universita;
+
+-- 1 Nome degli studenti del corso di laurea CS
+SELECT nome
+FROM studente
+WHERE corso_laurea = "CS";
 
 
--- 2. Nome degli insegnamenti tenuti dal docente King tra il 2004 e il 2005
-SELECT DISTINCT insegnamento.nome_insegnamento 
-FROM insegnamento 
-JOIN modulo ON insegnamento.codice_insegnamento = modulo.codice_insegnamento 
-WHERE modulo.docente = 'King' 
-AND modulo.anno BETWEEN 2004 AND 2005;
+-- 2 Codice e nome degli insegnamenti del dipartimento CS con almeno 4 ore
+SELECT codice_insegnamento, nome_insegnamento
+FROM insegnamento
+WHERE dipartimento = "CS" AND ore >= 4;
 
 
--- 3. Per ogni modulo di King: codice insegnamento, semestre, anno e numero di studenti con un voto registrato 
-SELECT m.codice_insegnamento, m.semestre, m.anno, COUNT(v.numero_studente) AS Numero_studenti
-FROM modulo m 
-JOIN votazione v ON m.identificatore_modulo = v.identificatore_modulo 
-WHERE m.docente = 'King' 
-GROUP BY m.identificatore_modulo, m.codice_insegnamento, m.semestre, m.anno;
+-- 3 Elenco dei docenti che hanno tenuto almeno un modulo, senza ripetizioni.
+SELECT DISTINCT docente
+FROM modulo;
 
 
--- 4. Carriera degli studenti CS in ordine cronologico
--- (Per ordinare Primavera prima di Autunno, basta usare "semestre DESC" perché P viene dopo A nell'alfabeto)
-SELECT studente.nome, insegnamento.nome_insegnamento, modulo.semestre, modulo.anno, votazione.voto 
-FROM studente 
-JOIN votazione ON studente.numero_studente = votazione.numero_studente 
-JOIN modulo ON votazione.identificatore_modulo = modulo.identificatore_modulo 
-JOIN insegnamento ON modulo.codice_insegnamento = insegnamento.codice_insegnamento 
-WHERE studente.Corso_laurea = 'CS' 
-ORDER BY modulo.anno ASC, modulo.semestre DESC;
+-- 4 Nome degli insegnamenti tenuti dal docente ‘King’ tra il 2004 e il 2005
+SELECT DISTINCT i.nome_insegnamento
+FROM insegnamento i
+JOIN modulo m ON i.codice_insegnamento = m.codice_insegnamento
+WHERE m.docente = "KING" AND m.anno BETWEEN 2004 AND 2005;
 
 
--- 5. Propedeuticità dirette e di secondo livello di Basi di dati (CS3380)
--- (La prima SELECT prende quelle dirette, la UNION unisce i risultati della seconda SELECT per il secondo livello)
-SELECT codice_propedeuticita 
-FROM propedeuticita 
-WHERE codice_insegnamento = 'CS3380'
-UNION
-SELECT p2.codice_propedeuticita 
-FROM propedeuticita p1 
-JOIN propedeuticita p2 ON p1.codice_propedeuticita = p2.codice_insegnamento 
+-- 5 Per ogni voto registrato in un modulo di King: codice insegnamento, semestre, anno, nome dello studente e voto
+SELECT m.codice_insegnamento, m.semestre, m.anno, s.nome, v.voto
+FROM modulo m
+JOIN votazione v ON m.identificatore_modulo = v.identificatore_modulo
+JOIN studente s ON v.numero_studente = s.numero_studente
+WHERE m.docente = 'KING';
+
+
+-- 6 Insegnamenti con almeno un voto registrato
+SELECT DISTINCT i.codice_insegnamento, i.nome_insegnamento
+FROM insegnamento i
+JOIN modulo m ON i.codice_insegnamento = m.codice_insegnamento
+JOIN votazione v ON m.identificatore_modulo = v.identificatore_modulo;
+
+
+-- 7 Carriera degli studenti CS: nome studente, nome e codice dell’insegnamento, semestre, anno, voto
+SELECT s.nome, i.nome_insegnamento, i.codice_insegnamento, m.semestre, m.anno, v.voto
+FROM studente s
+JOIN votazione v ON s.numero_studente = v.numero_studente
+JOIN modulo m ON v.identificatore_modulo = m.identificatore_modulo
+JOIN insegnamento i ON m.codice_insegnamento = i.codice_insegnamento
+WHERE s.corso_laurea = 'CS';
+
+
+-- 8 Coppie di moduli dello stesso insegnamento, ogni coppia una sola volta: 
+-- codice insegnamento, identificatore modulo 1, identificatore modulo 2, docente 1, docente 2
+SELECT
+    m1.codice_insegnamento,
+    m1.identificatore_modulo AS mod1,
+    m2.identificatore_modulo AS mod2,
+    m1.docente AS docente1,
+    m2.docente AS docente2
+FROM modulo m1
+JOIN modulo m2 ON m1.codice_insegnamento = m2.codice_insegnamento
+WHERE m1.identificatore_modulo < m2.identificatore_modulo;
+
+
+-- 9 Propedeuticità di secondo livello di ‘CS3380’: 
+-- insegnamento intermedio, codice e nome della propedeuticità di secondo livello
+SELECT p1.codice_propedeuticita AS intermedio, 
+       p2.codice_propedeuticita AS codice_propedeuticita, 
+       i.nome_insegnamento AS nome_propedeuticita
+FROM propedeuticita p1
+JOIN propedeuticita p2 ON p1.codice_propedeuticita = p2.codice_insegnamento
+JOIN insegnamento i ON p2.codice_propedeuticita = i.codice_insegnamento
 WHERE p1.codice_insegnamento = 'CS3380';
-
-
-
--- 6. Media dei voti degli studenti convertendo le lettere in numeri
-SELECT numero_studente, 
-       AVG(CASE voto 
-           WHEN 'A' THEN 4 
-           WHEN 'B' THEN 3 
-           WHEN 'C' THEN 2 
-           WHEN 'D' THEN 1 
-           WHEN 'F' THEN 0 
-       END) AS media
-FROM votazione 
-GROUP BY numero_studente;
-
-
--- 7. Insegnamenti che nessuno studente ha ancora sostenuto
--- (Seleziona l'insegnamento se NON ESISTE una riga corrispondente tra i voti registrati)
-SELECT nome_insegnamento 
-FROM insegnamento 
-WHERE NOT EXISTS (
-    SELECT * 
-    FROM modulo 
-    JOIN votazione ON modulo.identificatore_modulo = votazione.identificatore_modulo 
-    WHERE modulo.codice_insegnamento = insegnamento.codice_insegnamento
-);
